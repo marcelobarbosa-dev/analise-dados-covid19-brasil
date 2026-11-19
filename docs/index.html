@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COVID-19 no Brasil: Padrões Temporais, Regionais e o Efeito da Vacinação</title>
+<meta name="description" content="Estudo analítico-exploratório sobre a evolução da COVID-19 nas Unidades Federativas do Brasil (2020-2022), com pipeline reprodutível em Python sob princípios FAIR.">
+<style>
+  :root{
+    --blue:#1f4e8c;
+    --teal:#2e8b8b;
+    --ink:#222;
+    --muted:#555;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --border:#e2e6ec;
+    --fair-bg:#eaf1fb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Georgia,'Times New Roman',serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.65;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:40px 20px 80px;}
+  .card{background:var(--card);border-radius:10px;padding:48px 56px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  h1{font-size:2rem;color:var(--blue);line-height:1.25;margin:0 0 18px;}
+  .authors{font-size:1.05rem;margin:0 0 6px;}
+  .affil{color:var(--muted);font-style:italic;font-size:.95rem;margin:2px 0;}
+  .badges{margin:18px 0 10px;display:flex;gap:10px;flex-wrap:wrap;}
+  .badge{display:inline-block;background:#eef2f8;color:var(--blue);border:1px solid var(--border);
+         border-radius:5px;padding:4px 10px;font-size:.78rem;font-family:Arial,Helvetica,sans-serif;}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:#eef2f8;color:var(--blue);
+       border:1px solid var(--border);border-radius:6px;padding:8px 16px;text-decoration:none;
+       font-family:Arial,Helvetica,sans-serif;font-size:.92rem;font-weight:bold;}
+  .btn:hover{background:#dfe8f5;}
+  hr{border:none;border-top:1px solid var(--border);margin:28px 0;}
+  h2{color:var(--blue);font-size:1.4rem;border-bottom:1px solid var(--border);padding-bottom:8px;margin-top:44px;}
+  h3{color:var(--blue);font-size:1.12rem;margin-top:30px;}
+  .resumo{background:#f6f8fb;border-left:4px solid var(--blue);padding:20px 24px;margin:22px 0;border-radius:0 6px 6px 0;}
+  .resumo h2{margin-top:0;border:none;padding-bottom:0;font-size:1.05rem;letter-spacing:.04em;}
+  .kw{font-family:Arial,Helvetica,sans-serif;font-size:.88rem;color:var(--muted);}
+  .toc{background:#fbfbfc;border:1px solid var(--border);border-radius:8px;padding:20px 28px;margin:22px 0;
+       font-family:Arial,Helvetica,sans-serif;font-size:.95rem;}
+  .toc h2{margin-top:0;font-size:1.05rem;border:none;padding-bottom:0;}
+  .toc ol{margin:0;padding-left:20px;}
+  .toc li{margin:4px 0;}
+  .toc a{color:var(--ink);text-decoration:none;}
+  .toc a:hover{color:var(--blue);text-decoration:underline;}
+  code{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;background:#eef1f5;
+       padding:1px 6px;border-radius:4px;font-size:.88em;color:#8b3a62;}
+  pre{background:#f6f8fa;border:1px solid var(--border);border-radius:8px;padding:16px 18px;overflow-x:auto;
+      font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.85rem;line-height:1.5;}
+  pre code{background:none;padding:0;color:var(--ink);}
+  figure{margin:28px 0;text-align:center;}
+  figure img{max-width:100%;border:1px solid var(--border);border-radius:6px;}
+  figcaption{font-family:Arial,Helvetica,sans-serif;font-size:.85rem;color:var(--muted);margin-top:10px;}
+  .iframe-wrap{border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .iframe-wrap iframe{width:100%;border:none;display:block;}
+  .fair-box{background:var(--fair-bg);border:1px solid #c9d9f2;border-radius:8px;padding:22px 28px;margin:20px 0;}
+  .fair-box h3{margin-top:0;color:var(--blue);}
+  .fair-box ul{padding-left:20px;margin:10px 0;}
+  .fair-box li{margin:8px 0;}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-family:Arial,Helvetica,sans-serif;font-size:.9rem;}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;}
+  th{background:#f2f5f9;color:var(--blue);}
+  .rq{background:#fdf6ec;border-left:4px solid #d9823b;padding:14px 20px;margin:16px 0;border-radius:0 6px 6px 0;}
+  .refs{font-size:.95rem;}
+  .refs li{margin-bottom:10px;}
+  footer{text-align:center;color:var(--muted);font-family:Arial,Helvetica,sans-serif;font-size:.82rem;margin-top:40px;}
+  @media (max-width:640px){
+    .card{padding:28px 22px;}
+    h1{font-size:1.5rem;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+
+  <h1>COVID-19 no Brasil: Padrões Temporais, Regionais e o Efeito da Vacinação na Letalidade Aparente (2020–2022)</h1>
+
+  <p class="authors">Marcelo Barbosa de Oliveira Junior</p>
+  <p class="affil">Bacharelado em Sistemas de Informação — 6º Período</p>
+  <p class="affil">Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python)</p>
+  <p class="affil">Professor(a) orientador(a): a preencher pelo discente</p>
+
+  <div class="badges">
+    <span class="badge">FAIR Compliant</span>
+    <span class="badge">Python 3.11 · pandas · plotly</span>
+    <span class="badge">Dados: Brasil.IO (CC BY-SA 4.0)</span>
+  </div>
+  <a class="btn" href="https://github.com/marcelobarbosa-dev/analise-dados-covid19-brasil" target="_blank" rel="noopener">
+    📦 Ver Repositório GitHub (Código e Dados)
+  </a>
+
+  <hr>
+
+  <div class="resumo">
+    <h2>RESUMO</h2>
+    <p>
+      Este artigo apresenta um estudo analítico-exploratório sobre a
+      disseminação da COVID-19 nas 27 Unidades Federativas do Brasil entre
+      fevereiro de 2020 e março de 2022, empregando um pipeline
+      determinístico em Python (<code>pandas</code>/<code>numpy</code>) para
+      ingestão, limpeza e enriquecimento de dados públicos originários do
+      Brasil.IO. A metodologia inclui engenharia de métricas derivadas
+      (médias móveis de 7 dias, taxa de letalidade aparente, fase da
+      campanha de vacinação) e visualização estática e interativa (Plotly)
+      para responder a três perguntas de pesquisa sobre a magnitude regional
+      do impacto, a relação entre cobertura vacinal e letalidade, e o efeito
+      da vacinação na gravidade clínica aparente da doença. Os resultados
+      indicam forte heterogeneidade entre estados — de 156 a 445 óbitos por
+      100 mil habitantes —, uma correlação fraca e positiva entre cobertura
+      vacinal e letalidade no corte transversal final (r ≈ 0,24, atribuída a
+      fatores de confusão temporais), e uma queda consistente na letalidade
+      mediana após o início da vacinação (2,49% → 2,06%). O estudo segue
+      integralmente os princípios FAIR de ciência aberta, com repositório
+      público, dicionário de dados, licenciamento explícito e ambiente
+      computacional reprodutível.
+    </p>
+    <p class="kw"><strong>Palavras-chave:</strong> COVID-19, Análise de Dados, Python, Visualização de Dados, Princípios FAIR, Epidemiologia, Saúde Pública.</p>
+  </div>
+
+  <div class="toc">
+    <h2>Sumário</h2>
+    <ol>
+      <li><a href="#introducao">Introdução</a></li>
+      <li><a href="#metodologia">Metodologia e Pipeline de Dados</a></li>
+      <li><a href="#resultados">Resultados e Discussão</a></li>
+      <li><a href="#conclusao">Conclusão</a></li>
+      <li><a href="#fair">Disponibilidade dos Dados e Declaração FAIR</a></li>
+      <li><a href="#referencias">Referências</a></li>
+    </ol>
+  </div>
+
+  <h2 id="introducao">1. Introdução</h2>
+  <p>
+    A pandemia de COVID-19 produziu, no Brasil, um dos maiores volumes de
+    dados epidemiológicos abertos já disponibilizados publicamente por
+    iniciativa cidadã — destacando-se o projeto Brasil.IO, que desde 2020
+    consolida boletins diários das Secretarias Estaduais de Saúde em um
+    formato tabular acessível. A mera disponibilização desses dados, no
+    entanto, não garante sua utilidade analítica: é necessário um pipeline
+    de engenharia de dados rigoroso, auditável e reprodutível para extrair
+    conhecimento confiável a partir de boletins heterogêneos, sujeitos a
+    retificações e lacunas de notificação.
+  </p>
+  <p>
+    Este trabalho tem como motivação prática compreender, de forma
+    quantitativa, como a pandemia afetou de maneira desigual as diferentes
+    regiões do país e em que medida a campanha de vacinação alterou o perfil
+    de gravidade da doença — informações relevantes tanto para a gestão de
+    políticas públicas de saúde quanto como exercício de ciência de dados
+    aberta e reprodutível.
+  </p>
+
+  <div class="rq">
+    <strong>Perguntas de Pesquisa</strong>
+    <ul>
+      <li><strong>RQ1:</strong> Como os casos e óbitos por 100 mil habitantes evoluíram entre 2020 e 2022 nas regiões e estados brasileiros, e quais Unidades Federativas tiveram os piores/melhores desfechos acumulados?</li>
+      <li><strong>RQ2:</strong> Existe relação entre a cobertura vacinal (1ª dose) e a taxa de letalidade aparente observada nos estados ao final da série histórica?</li>
+      <li><strong>RQ3:</strong> A chegada da vacinação está associada a uma redução mensurável na letalidade aparente, quando comparadas as fases pré- e pós-vacinação?</li>
+    </ul>
+  </div>
+
+  <h2 id="metodologia">2. Metodologia e Pipeline de Dados</h2>
+  <p>
+    A fonte primária dos dados é o <strong>Brasil.IO</strong>, dataset
+    <code>covid19</code>, tabela <code>caso_full</code> — boletins de casos e
+    óbitos por município, consolidados a partir das Secretarias Estaduais de
+    Saúde, licenciados sob CC BY-SA 4.0. O arquivo bruto completo
+    (<code>caso_full.csv.gz</code>, ≈88 MB, granularidade diária por
+    município) excede o limiar de 50 MB estabelecido pela norma do projeto
+    para versionamento direto; por isso, o pipeline consome uma cópia
+    estruturada e já agregada por Unidade Federativa — mantida pelo projeto
+    aberto <code>wcota/covid19br</code>, que por sua vez consolida o próprio
+    Brasil.IO como fonte — preservando integralmente a rastreabilidade até a
+    origem. A proveniência completa está documentada em
+    <code>data/data_dictionary.md</code>.
+  </p>
+  <p>
+    O tratamento foi conduzido em <code>Python 3.11</code>, com
+    <code>pandas</code> e <code>numpy</code>, e inclui: remoção do registro
+    agregado nacional (<code>state == "TOTAL"</code>) para evitar dupla
+    contagem; tipagem explícita de colunas numéricas; junção com metadados
+    de região geográfica por UF; e três famílias de métricas derivadas.
+  </p>
+
+  <pre><code># Trecho real de src/etl.py — engenharia de métricas derivadas
+df["lethality_rate"] = np.where(
+    df["totalCases"] > 0, df["deaths"] / df["totalCases"], np.nan
+)
+
+df = df.sort_values(["state", "date"])
+df["cases_7d_avg"] = (
+    df.groupby("state")["newCases"]
+      .transform(lambda s: s.rolling(7, min_periods=1).mean())
+)
+
+df["wave_phase"] = np.where(
+    df["vaccinated_per_100_inhabitants"].notna()
+    & (df["vaccinated_per_100_inhabitants"] > 0),
+    "pós-vacinação", "pré-vacinação",
+)</code></pre>
+
+  <p>
+    Valores ausentes nas colunas de vacinação, anteriores ao início da
+    campanha (jan/2021), foram tratados como <em>ausência estrutural</em> —
+    nunca imputados como zero — para não distorcer médias de cobertura.
+    Registros de retificação com valores diários negativos foram
+    preservados, em conformidade com o princípio de não realizar operações
+    destrutivas sem rastreabilidade. Os dados processados foram persistidos
+    em formatos abertos e colunarmente tipados:
+    <code>data/processed/covid_states_processed.parquet</code> e
+    <code>.csv.gz</code>.
+  </p>
+
+  <h2 id="resultados">3. Resultados e Discussão</h2>
+
+  <h3>3.1 Heterogeneidade regional da mortalidade (RQ1)</h3>
+  <p>
+    O Brasil registrou, em média nacional, <strong>315,3 óbitos por 100 mil
+    habitantes</strong> ao longo da série histórica, mas com dispersão
+    expressiva entre estados: do Rio de Janeiro (<strong>445,1</strong>),
+    Mato Grosso (<strong>433,1</strong>) e Rondônia (<strong>418,2</strong>)
+    no topo, ao Maranhão (<strong>156,2</strong>), Bahia (<strong>211,5</strong>)
+    e Alagoas (<strong>217,0</strong>) nas posições mais baixas — uma razão
+    de quase 3× entre o estado mais e o menos afetado proporcionalmente.
+  </p>
+
+  <figure>
+    <img src="assets/fig2_ranking_states.png" alt="Ranking de óbitos acumulados por 100 mil habitantes, por Unidade Federativa">
+    <figcaption>Figura 1. Óbitos acumulados por 100 mil habitantes, por Unidade Federativa, ao final da série histórica.</figcaption>
+  </figure>
+
+  <p>
+    A trajetória temporal (Figura 2) evidencia três ondas nacionais
+    nitidamente sincronizadas entre regiões — meados de 2020, o pico
+    acentuado do início de 2021 (variante Gama/P.1, concentrado no
+    Sudeste) e uma onda residual no início de 2022 (período Ômicron) — com
+    a região Sudeste consistentemente liderando o volume absoluto de
+    óbitos diários, compatível com sua maior densidade populacional.
+  </p>
+
+  <figure>
+    <img src="assets/fig1_regional_timeseries.png" alt="Evolução de óbitos diários por COVID-19, média móvel de 7 dias, por região do Brasil">
+    <figcaption>Figura 2. Óbitos diários por COVID-19 (média móvel de 7 dias), somados por região do Brasil, 2020–2022.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="iframe-wrap">
+      <iframe src="assets/fig5_heatmap_monthly.html" height="760" loading="lazy" title="Mapa de calor de novos casos mensais por UF"></iframe>
+    </div>
+    <figcaption>Figura 3 (interativa). Novos casos de COVID-19 por mês, por Unidade Federativa — passe o cursor para ver os valores exatos.</figcaption>
+  </figure>
+
+  <h3>3.2 Cobertura vacinal e letalidade aparente (RQ2)</h3>
+  <p>
+    Ao final da série, a cobertura vacinal (1ª dose) nacional média foi de
+    <strong>84,5%</strong> da população, variando de 73,4% (Amapá) a 96,6%
+    (Piauí) — indicando convergência relativamente alta entre estados apesar
+    das diferenças logísticas regionais. No corte transversal do último dia
+    disponível, a correlação de Pearson entre cobertura vacinal e taxa de
+    letalidade aparente foi de <strong>r ≈ 0,24</strong> — fraca e, de
+    forma contraintuitiva, positiva.
+  </p>
+
+  <figure>
+    <div class="iframe-wrap">
+      <iframe src="assets/fig4_vaccination_vs_lethality.html" height="540" loading="lazy" title="Dispersão entre cobertura vacinal e letalidade aparente por estado"></iframe>
+    </div>
+    <figcaption>Figura 4 (interativa). Cobertura vacinal (1ª dose) vs. taxa de letalidade aparente, por UF, ao final da série (tamanho do marcador ∝ casos por 100 mil habitantes).</figcaption>
+  </figure>
+
+  <p>
+    Essa correlação positiva fraca <em>não</em> deve ser lida como "vacinar
+    mais aumenta a letalidade" — trata-se de um efeito de confusão temporal
+    clássico em dados observacionais de corte transversal: estados que
+    sofreram ondas mais severas antes da vacinação em massa (quando a
+    letalidade era estruturalmente mais alta, por menor capacidade
+    hospitalar relativa e ausência de imunização) também tendem a ser os
+    que, posteriormente, atingiram maior cobertura vacinal acumulada. A
+    análise longitudinal da seção seguinte controla parcialmente esse
+    viés ao comparar fases dentro de cada série temporal, em vez de um
+    único corte final.
+  </p>
+
+  <h3>3.3 Efeito temporal da vacinação na letalidade (RQ3)</h3>
+  <p>
+    Comparando a distribuição da taxa de letalidade aparente antes e depois
+    do início de cada campanha estadual de vacinação (Figura 5), observa-se
+    queda consistente: a mediana recua de <strong>2,49%</strong> no período
+    pré-vacinação para <strong>2,06%</strong> no período pós-vacinação, e a
+    média de <strong>3,06%</strong> para <strong>2,13%</strong> — uma
+    redução de cerca de 30% na letalidade aparente média, compatível com a
+    expectativa clínica de que a vacinação reduz a progressão para desfechos
+    graves e óbito.
+  </p>
+
+  <figure>
+    <img src="assets/fig3_lethality_by_phase.png" alt="Boxplot da distribuição da taxa de letalidade aparente, por fase da campanha de vacinação">
+    <figcaption>Figura 5. Distribuição da taxa de letalidade aparente (%) por estado-dia, comparando as fases pré- e pós-vacinação (outliers extremos omitidos para legibilidade).</figcaption>
+  </figure>
+
+  <p>
+    Em conjunto, os resultados de RQ2 e RQ3 ilustram um ponto metodológico
+    central em análise de dados observacionais: a mesma pergunta —
+    "a vacinação reduz a letalidade?" — pode produzir respostas
+    aparentemente contraditórias dependendo do desenho analítico (corte
+    transversal vs. comparação longitudinal de fases), reforçando a
+    importância de múltiplas perspectivas analíticas antes de extrair
+    conclusões causais.
+  </p>
+
+  <h2 id="conclusao">4. Conclusão</h2>
+  <p>
+    Este estudo demonstrou, a partir de um pipeline reprodutível em Python,
+    que a pandemia de COVID-19 afetou de forma marcadamente desigual as
+    Unidades Federativas do Brasil — com uma razão de quase 3× entre os
+    estados mais e menos atingidos proporcionalmente à população — e que o
+    avanço da vacinação esteve associado a uma queda consistente de
+    aproximadamente 30% na letalidade aparente mediana, quando analisada
+    longitudinalmente por estado.
+  </p>
+  <p>
+    <strong>Limitações:</strong> os dados refletem casos e óbitos
+    <em>confirmados e notificados</em>, sujeitos a subnotificação
+    heterogênea entre estados e períodos (especialmente em 2020, antes da
+    ampliação da testagem); a métrica de letalidade aparente
+    (<code>deaths/totalCases</code>) é sensível à taxa de testagem e não
+    equivale à letalidade clínica real; e a correlação cobertura vacinal
+    × letalidade no corte transversal está sujeita a fatores de confusão
+    temporais, como discutido na Seção 3.2.
+  </p>
+  <p>
+    <strong>Trabalhos futuros</strong> poderiam incorporar a granularidade
+    municipal completa do <code>caso_full</code> original para investigar
+    desigualdades intraestaduais, cruzar os dados com indicadores
+    socioeconômicos (IDHM, renda, acesso a leitos de UTI) e aplicar modelos
+    de regressão com defasagem temporal (lag) para estimar o efeito causal
+    da vacinação de forma mais robusta que a comparação de fases aqui
+    empregada.
+  </p>
+
+  <h2 id="fair">5. Disponibilidade dos Dados e Declaração FAIR</h2>
+  <div class="fair-box">
+    <h3>Declaração de Aderência aos Princípios FAIR</h3>
+    <ul>
+      <li><strong>Findable (Localizável):</strong> repositório com <code>README.md</code> abrangente, palavras-chave indexadoras e link perene para a fonte original dos dados brutos; identificação de autoria, disciplina e instituição no cabeçalho deste artigo.</li>
+      <li><strong>Accessible (Acessível):</strong> repositório público no GitHub, sem barreiras de autenticação; artigo publicado via GitHub Pages com carregamento rápido e layout responsivo (desktop e mobile).</li>
+      <li><strong>Interoperable (Interoperável):</strong> dicionário de dados completo em <code>data/data_dictionary.md</code>; dados processados persistidos em Apache Parquet e CSV.GZ (formatos abertos).</li>
+      <li><strong>Reusable (Reutilizável):</strong> código sob licença MIT; dados sob CC BY-SA 4.0 (herdada do Brasil.IO); <code>requirements.txt</code> com dependências estritamente travadas, viabilizando a recriação do ambiente.</li>
+    </ul>
+  </div>
+
+  <p><strong>Reprodução integral do pipeline:</strong></p>
+  <pre><code>git clone https://github.com/marcelobarbosa-dev/analise-dados-covid19-brasil.git
+cd analise-dados-covid19-brasil
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python src/etl.py          # baixa e limpa os dados
+python src/analysis.py     # gera as figuras deste artigo</code></pre>
+
+  <h2 id="referencias">6. Referências</h2>
+  <ol class="refs">
+    <li>BRASIL.IO. <em>Dataset covid19 — caso_full</em>. Disponível em: &lt;https://brasil.io/dataset/covid19/caso_full/&gt;. Acesso em: 19 nov. 2026.</li>
+    <li>COTA, Wesley. <em>covid19br: Brazilian COVID-19 dataset</em>. DOI: 10.1590/SciELOPreprints.362. Disponível em: &lt;https://github.com/wcota/covid19br&gt;. Acesso em: 19 nov. 2026.</li>
+    <li>WILKINSON, Mark D. et al. The FAIR Guiding Principles for scientific data management and stewardship. <em>Scientific Data</em>, v. 3, n. 1, p. 1–9, 2016.</li>
+    <li>MCKINNEY, Wes. <em>Python for Data Analysis</em>. 3. ed. Sebastopol: O'Reilly Media, 2022.</li>
+    <li>PLOTLY TECHNOLOGIES INC. <em>Plotly Python Open Source Graphing Library</em>. Disponível em: &lt;https://plotly.com/python/&gt;. Acesso em: 19 nov. 2026.</li>
+    <li>MINISTÉRIO DA SAÚDE (Brasil). <em>Painel Coronavírus</em>. Disponível em: &lt;https://covid.saude.gov.br/&gt;. Acesso em: 19 nov. 2026.</li>
+  </ol>
+
+  <footer>
+    Artigo gerado como Projeto Final de Disciplina — Bacharelado em Sistemas de Informação.
+    Código-fonte e dados disponíveis no repositório GitHub vinculado acima.
+  </footer>
+
+</div>
+</div>
+</body>
+</html>

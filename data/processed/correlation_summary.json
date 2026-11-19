@@ -1,0 +1,49 @@
+{
+  "pearson_corr_vacc_lethality": 0.2359,
+  "top5_deaths_per_100k": [
+    {
+      "state": "RJ",
+      "deaths_per_100k_inhabitants": 445.13324
+    },
+    {
+      "state": "MT",
+      "deaths_per_100k_inhabitants": 433.06492
+    },
+    {
+      "state": "RO",
+      "deaths_per_100k_inhabitants": 418.18003
+    },
+    {
+      "state": "PR",
+      "deaths_per_100k_inhabitants": 402.50283
+    },
+    {
+      "state": "GO",
+      "deaths_per_100k_inhabitants": 399.53813
+    }
+  ],
+  "bottom5_deaths_per_100k": [
+    {
+      "state": "MA",
+      "deaths_per_100k_inhabitants": 156.22215
+    },
+    {
+      "state": "BA",
+      "deaths_per_100k_inhabitants": 211.5166
+    },
+    {
+      "state": "AL",
+      "deaths_per_100k_inhabitants": 216.99806
+    },
+    {
+      "state": "PA",
+      "deaths_per_100k_inhabitants": 221.14726
+    },
+    {
+      "state": "AC",
+      "deaths_per_100k_inhabitants": 231.64972
+    }
+  ],
+  "national_mean_deaths_per_100k": 315.28,
+  "national_mean_lethality_pct": 1.71
+}
